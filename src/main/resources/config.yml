@@ -1,0 +1,41 @@
+# ============================================================
+# invertoTimer Configuration
+# ============================================================
+
+# ------------------------------------------------------------
+# Language of the plugin.
+# This controls messages sent by commands and other plugin messages.
+#
+# Value should match a properties file name under:
+#   src/main/resources/lang/<lang>.properties
+#
+# Example:
+#   lang: "en_us"  -> lang/en_us.properties
+#   lang: "zh_cn"  -> lang/zh_cn.properties
+# ------------------------------------------------------------
+lang: "en_us"
+
+# ------------------------------------------------------------
+# Default timezone for all timers.
+# Timers using cron/time are evaluated in this timezone.
+# Valid values are Java ZoneId strings, e.g.:
+#   "Asia/Shanghai", "UTC", "Europe/Paris"
+# ------------------------------------------------------------
+timezone: "Asia/Shanghai"
+
+# ------------------------------------------------------------
+# Global server limitation (applied BEFORE each timer's limitation).
+# This is evaluated by the player's current connected backend server name.
+#
+# mode:
+#   - blacklist: deny listed servers, allow others
+#   - whitelist: allow listed servers, deny others
+#
+# list:
+#   - list of server names in your Velocity config (server-info name)
+# ------------------------------------------------------------
+limitation:
+  mode: blacklist
+  list:
+    - game1
+    - test1

@@ -1,0 +1,186 @@
+# ============================================================
+# Configured timers
+# ============================================================
+timers:
+
+  # ----------------------------------------------------------
+  # Timer id (used in commands, placeholders {id}, etc.)
+  # ----------------------------------------------------------
+  new-year:
+
+    # Human readable description (placeholder: {description})
+    description: "New year timer."
+
+    # --------------------------------------------------------
+    # Per-timer server limitation.
+    # Applied AFTER global limitation.
+    # --------------------------------------------------------
+    limitation:
+      mode: blacklist
+      list:
+        - game1
+        - test1
+
+    # --------------------------------------------------------
+    # Choose ONE: cron OR time
+    #
+    # cron: 5-field cron format (min hour day month week)
+    # Example below means: every Jan 1st 00:00 (in configured timezone)
+    #
+    # time: one-time absolute time (yyyy-MM-dd HH:mm:ss)
+    # If time is in the past, this timer will not run again.
+    # --------------------------------------------------------
+    cron: "0 0 1 1 *"
+    # time: "2026-01-01 00:00:00"
+
+    # ========================================================
+    # SHOWCASES (periodic displays to players)
+    #
+    # All showcase texts support:
+    #   1) {i18n:key}  -> replaced by language file value
+    #   2) Placeholders:
+    #        {remaining} {days} {hours} {minutes} {seconds}
+    #        {total_seconds} {id} {description} {target}
+    #   3) MiniMessage formatting:
+    #        <red>text</red>, <gold>, <gradient:...>, etc.
+    #
+    # start-at:
+    #   When to start showing BEFORE the target time.
+    #   Examples: 10m, 30s, 1h, 1d
+    #
+    # interval:
+    #   How often to update/show.
+    #   Examples: 1s, 5s, 30s, 1m
+    #
+    # NOTE:
+    #   - bossbar progress is based on start-at:
+    #       start-at 1h -> bossbar progress decreases from 1.0 to 0.0 in that 1 hour.
+    #   - If start-at is omitted, it starts immediately once the timer has a next target.
+    # ========================================================
+    showcases:
+
+      # ------------------------------------------------------
+      # actionbar showcase
+      # ------------------------------------------------------
+      actionbar:
+        start-at: 1h
+        interval: 1s
+        # Example with MiniMessage + placeholders:
+        # text: "<yellow>New Year in</yellow> <white>{remaining}</white>"
+        text: "New Year in {remaining}"
+
+      # ------------------------------------------------------
+      # bossbar showcase
+      # ------------------------------------------------------
+      bossbar:
+        start-at: 1h
+        interval: 1s
+        # You can also use i18n:
+        # text: "<gradient:gold:yellow>{i18n:timer.newyear.bossbar}</gradient> <white>{remaining}</white>"
+        text: "New Year in {remaining}"
+
+      # ------------------------------------------------------
+      # text showcase (chat message)
+      # ------------------------------------------------------
+      text:
+        start-at: 10m
+        interval: 30s
+        text: "[Timer] {remaining} left"
+
+      # ------------------------------------------------------
+      # title showcase (NEW MECHANISM)
+      #
+      # Only ONE key: "title"
+      # It can contain BOTH:
+      #   - title:    main title text
+      #   - subtitle: subtitle text
+      #
+      # This replaces the old design where you had:
+      #   showcases.title and showcases.subtitle as two separate showcases.
+      #
+      # Both fields support i18n/placeholders/minimessage.
+      # ------------------------------------------------------
+      title:
+        start-at: 10m
+        interval: 5s
+        title: "<gold>New Year</gold>"
+        subtitle: "<gray>{remaining}</gray>"
+
+    # ========================================================
+    # ACTIONS (one-shot triggers at specified time offsets)
+    #
+    # shift:
+    #   Time offset relative to target time.
+    #   Negative = BEFORE target, Positive = AFTER target.
+    #   Examples: -30m, -15m, 0s, 5s, 1m
+    #
+    # Supported action types:
+    #   - text
+    #   - transfer
+    #   - command
+    #
+    # Text action supports:
+    #   options.text-type:
+    #     message | actionbar | title | subtitle
+    #
+    # Text content supports:
+    #   i18n/placeholders/minimessage (same as showcases)
+    # ========================================================
+    actions:
+
+      # ------------------------------------------------------
+      # Send a chat message 30 minutes before target
+      # ------------------------------------------------------
+      - type: text
+        shift: -30m
+        options:
+          text-type: message
+          info: "<green>Ready?</green>"
+
+      # ------------------------------------------------------
+      # Transfer matched players 15 minutes before target
+      #
+      # transferee:
+      #   Java regex to match online player usernames (matches()).
+      #   Use ".*" to match all players.
+      # ------------------------------------------------------
+      - type: transfer
+        shift: -15m
+        options:
+          # target backend server name in Velocity
+          target: hub
+          transferee: ".*"
+
+      # ------------------------------------------------------
+      # Show a title at the target moment
+      # ------------------------------------------------------
+      - type: text
+        shift: 0s
+        options:
+          text-type: title
+          info: "<gold>Happy New Year!</gold>"
+
+      # ------------------------------------------------------
+      # Execute a command 5 seconds after target
+      #
+      # executor:
+      #   - console: executed by proxy console (match ignored)
+      #   - player : executed by matched online players
+      #
+      # match (only for executor=player):
+      #   Java regex to match online player usernames.
+      #   Examples:
+      #     ".*"               -> all online players
+      #     "^Steve_.*$"       -> usernames starting with Steve_
+      #     "^(Alice|Bob)$"    -> only Alice or Bob
+      #
+      # NOTE:
+      #   - command is treated as plain String; do NOT use MiniMessage here.
+      #   - placeholders like {id} {remaining} etc depend on your renderString() policy.
+      # ------------------------------------------------------
+      - type: command
+        shift: 5s
+        options:
+          executor: player
+          match: ".*"
+          command: "/function a"
