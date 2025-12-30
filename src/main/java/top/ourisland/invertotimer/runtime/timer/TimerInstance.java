@@ -325,8 +325,13 @@ final class TimerInstance {
 
     void dispose() {
         cancelActionTasks();
+
         if (bossbarShowcase != null) {
-            for (Player p : proxy.getAllPlayers()) bossbarShowcase.hideFrom(p);
+            for (Player p : proxy.getAllPlayers()) {
+                try {
+                    bossbarShowcase.hideFrom(p);
+                } catch (Exception ignored) {}
+            }
         }
     }
 }
