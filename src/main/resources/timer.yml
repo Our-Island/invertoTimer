@@ -123,6 +123,27 @@ timers:
     #   options.text-type:
     #     message | actionbar | title | subtitle
     #
+    # options.info:
+    #   - For message/actionbar: String
+    #   - For title/subtitle:
+    #       1) String:
+    #            text-type: title    -> title = info,    subtitle = ""
+    #            text-type: subtitle -> title = "",      subtitle = info
+    #
+    #       2) Array/List (recommended):
+    #            info: [title, subtitle, fadeIn, stay, fadeOut]
+    #
+    #          Index mapping:
+    #            0 -> title text
+    #            1 -> subtitle text
+    #            2 -> fadeIn seconds  (optional)
+    #            3 -> stay seconds    (optional)
+    #            4 -> fadeOut seconds (optional)
+    #
+    #          Times are in seconds, for Title.Times.times(...)
+    #          Missing entries fall back to defaults:
+    #            fadeIn = 0s, stay = 2s, fadeOut = 0s
+    #
     # Text content supports:
     #   i18n/placeholders/minimessage (same as showcases)
     # ========================================================
@@ -152,13 +173,32 @@ timers:
           transferee: ".*"
 
       # ------------------------------------------------------
+      # Subtitle-only example:
+      #   text-type: subtitle + String
+      #   -> title = "", subtitle = info
+      # ------------------------------------------------------
+      - type: text
+        shift: -10s
+        options:
+          text-type: subtitle
+          info: "<gray>Get ready...</gray>"
+
+      # ------------------------------------------------------
       # Show a title at the target moment
+      #
+      # info array (title/subtitle + times):
+      #   [title, subtitle, fadeInSeconds, staySeconds, fadeOutSeconds]
       # ------------------------------------------------------
       - type: text
         shift: 0s
         options:
           text-type: title
-          info: "<gold>Happy New Year!</gold>"
+          info:
+            - "<gold>Happy New Year!</gold>"
+            - "<gray>{remaining}</gray>"
+            - "0"
+            - "2"
+            - "0"
 
       # ------------------------------------------------------
       # Execute a command 5 seconds after target

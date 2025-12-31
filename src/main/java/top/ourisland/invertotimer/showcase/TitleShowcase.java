@@ -5,6 +5,8 @@ import net.kyori.adventure.title.Title;
 import top.ourisland.invertotimer.runtime.I18n;
 import top.ourisland.invertotimer.runtime.RuntimeContext;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class TitleShowcase implements Showcase {
@@ -30,13 +32,16 @@ public class TitleShowcase implements Showcase {
 
     @Override
     public void show() {
-        // 两段都走 ctx.render：支持 {i18n:key} + MiniMessage + 你的 placeholders
         final Component t = ctx.render(title);
         final Component s = ctx.render(subtitle);
 
         for (var p : ctx.players()) {
             if (!ctx.allowed(p)) continue;
-            p.showTitle(Title.title(t, s));
+            p.showTitle(Title.title(t, s, Title.Times.times(
+                    Duration.of(0, ChronoUnit.SECONDS),
+                    Duration.of(2, ChronoUnit.SECONDS),
+                    Duration.of(0, ChronoUnit.SECONDS)
+            )));
         }
     }
 }

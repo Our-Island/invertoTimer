@@ -19,11 +19,11 @@ public final class ActionFactory {
         final Map<String, Object> opt = ac.options();
 
         return switch (type) {
-            case "text" -> new TextAction(
-                    ctx,
-                    TextAction.parse(String.valueOf(opt.getOrDefault("text-type", "message"))),
-                    String.valueOf(opt.getOrDefault("info", ""))
-            );
+            case "text" -> {
+                final Object infoRaw = opt.get("info");
+                final String textType = String.valueOf(opt.getOrDefault("text-type", "message"));
+                yield new TextAction(ctx, TextAction.parse(textType), infoRaw);
+            }
             case "transfer" -> new TransferAction(
                     ctx,
                     String.valueOf(opt.getOrDefault("target", "")),
