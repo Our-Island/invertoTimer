@@ -1,7 +1,7 @@
 package top.ourisland.invertotimer.config.model;
 
-import top.ourisland.invertotimer.config.SimpleYaml;
-import top.ourisland.invertotimer.runtime.timer.TimeUtil;
+import top.ourisland.invertotimer.util.YamlUtil;
+import top.ourisland.invertotimer.util.TimeUtil;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -22,7 +22,7 @@ public record ActionConfig(
 ) {
     public static ActionConfig fromYaml(final Object obj) {
         if (!(obj instanceof Map<?, ?> m)) return null;
-        String type = SimpleYaml.getString(m, "type", "");
+        String type = YamlUtil.getString(m, "type", "");
         Duration shift = TimeUtil.parseDurationLoose(m.get("shift"));
         if (shift == null) shift = Duration.ZERO;
 

@@ -1,6 +1,6 @@
 package top.ourisland.invertotimer.config.model;
 
-import top.ourisland.invertotimer.runtime.timer.TimeUtil;
+import top.ourisland.invertotimer.util.TimeUtil;
 
 import java.time.Duration;
 import java.util.ArrayList;

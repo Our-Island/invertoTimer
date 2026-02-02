@@ -1,6 +1,6 @@
 package top.ourisland.invertotimer.config.model;
 
-import top.ourisland.invertotimer.config.SimpleYaml;
+import top.ourisland.invertotimer.util.YamlUtil;
 
 import java.time.ZoneId;
 import java.util.Map;
@@ -22,8 +22,8 @@ public record GlobalConfig(
     }
 
     public static GlobalConfig fromYaml(final Map<?, ?> m) {
-        final String lang = SimpleYaml.getString(m, "lang", "en_us");
-        final String tz = SimpleYaml.getString(m, "timezone", ZoneId.systemDefault().getId());
+        final String lang = YamlUtil.getString(m, "lang", "en_us");
+        final String tz = YamlUtil.getString(m, "timezone", ZoneId.systemDefault().getId());
 
         ZoneId zone;
         try {

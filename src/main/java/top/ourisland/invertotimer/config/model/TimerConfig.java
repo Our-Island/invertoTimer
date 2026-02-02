@@ -1,6 +1,6 @@
 package top.ourisland.invertotimer.config.model;
 
-import top.ourisland.invertotimer.config.SimpleYaml;
+import top.ourisland.invertotimer.util.YamlUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,7 +28,7 @@ public record TimerConfig(
         List<ActionConfig> actions
 ) {
     public static TimerConfig fromYaml(final String id, final Map<?, ?> m) {
-        String desc = SimpleYaml.getString(m, "description", id);
+        String desc = YamlUtil.getString(m, "description", id);
         String cron = m.get("cron") == null ? null : String.valueOf(m.get("cron"));
         String time = m.get("time") == null ? null : String.valueOf(m.get("time"));
 
