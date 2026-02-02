@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import top.ourisland.invertotimer.config.model.GlobalConfig;
 import top.ourisland.invertotimer.config.model.TimerConfig;
+import top.ourisland.invertotimer.util.YamlUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,7 +61,7 @@ public class ConfigManager {
     private GlobalConfig loadGlobal() {
         final Path p = dataDir.resolve("config.yml");
         try {
-            final Object root = SimpleYaml.parse(Files.readString(p));
+            final Object root = YamlUtil.parse(Files.readString(p));
             if (!(root instanceof Map<?, ?> m)) {
                 logger.warn("config.yml root is not a map, using defaults.");
                 return GlobalConfig.defaults();
@@ -75,7 +76,7 @@ public class ConfigManager {
     private Map<String, TimerConfig> loadTimers() {
         final Path p = dataDir.resolve("timer.yml");
         try {
-            final Object root = SimpleYaml.parse(Files.readString(p));
+            final Object root = YamlUtil.parse(Files.readString(p));
             if (!(root instanceof Map<?, ?> m)) {
                 logger.warn("timer.yml root is not a map.");
                 return new LinkedHashMap<>();

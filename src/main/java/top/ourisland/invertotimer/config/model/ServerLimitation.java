@@ -1,6 +1,6 @@
 package top.ourisland.invertotimer.config.model;
 
-import top.ourisland.invertotimer.config.SimpleYaml;
+import top.ourisland.invertotimer.util.YamlUtil;
 
 import java.util.*;
 
@@ -16,7 +16,7 @@ public class ServerLimitation {
     public static ServerLimitation fromYaml(final Object obj) {
         if (!(obj instanceof Map<?, ?> m)) return allowAll();
 
-        final String modeStr = SimpleYaml.getString(m, "mode", "blacklist");
+        final String modeStr = YamlUtil.getString(m, "mode", "blacklist");
         final Mode mode = "whitelist".equalsIgnoreCase(modeStr) ? Mode.WHITELIST : Mode.BLACKLIST;
 
         final Set<String> set = new HashSet<>();

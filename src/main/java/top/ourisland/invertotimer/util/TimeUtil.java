@@ -1,4 +1,4 @@
-package top.ourisland.invertotimer.runtime.timer;
+package top.ourisland.invertotimer.util;
 
 import java.time.Duration;
 import java.util.Locale;
