@@ -3,6 +3,7 @@ package top.ourisland.invertotimer.runtime.timer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
+import lombok.NonNull;
 import org.slf4j.Logger;
 import top.ourisland.invertotimer.InvertoTimer;
 import top.ourisland.invertotimer.action.Action;
@@ -53,13 +54,13 @@ final class TimerInstance {
     private RuntimeContext ctx;
 
     TimerInstance(
-            final InvertoTimer plugin,
+            @NonNull final InvertoTimer plugin,
             final ProxyServer proxy,
             final Logger logger,
             final TimerConfig cfg,
             final ZoneId zoneId
     ) {
-        this.plugin = Objects.requireNonNull(plugin);
+        this.plugin = plugin;
         this.proxy = proxy;
         this.logger = logger;
         this.cfg = cfg;
@@ -92,7 +93,8 @@ final class TimerInstance {
         this.ctx = new RuntimeContext(
                 proxy,
                 this::isPlayerAllowedUsingLastGlobal,
-                s -> applyPlaceholders(s, lastNow == null ? Instant.now() : lastNow)
+                s -> applyPlaceholders(s, lastNow == null ? Instant.now() : lastNow),
+                logger
         );
     }
 

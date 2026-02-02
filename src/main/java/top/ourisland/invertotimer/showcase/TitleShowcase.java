@@ -1,21 +1,29 @@
 package top.ourisland.invertotimer.showcase;
 
+import lombok.NonNull;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import top.ourisland.invertotimer.runtime.RuntimeContext;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Supplier;
 
+/**
+ * A showcase using title and subtitle to display information.
+ *
+ * @author Chiloven945
+ */
 public class TitleShowcase implements Showcase {
     private final RuntimeContext ctx;
     private final Supplier<Object> textSupplier;
 
-    public TitleShowcase(RuntimeContext ctx, Supplier<Object> textSupplier) {
-        this.ctx = Objects.requireNonNull(ctx);
-        this.textSupplier = Objects.requireNonNull(textSupplier);
+    public TitleShowcase(
+            @NonNull RuntimeContext ctx,
+            @NonNull Supplier<Object> textSupplier
+    ) {
+        this.ctx = ctx;
+        this.textSupplier = textSupplier;
     }
 
     @Override
@@ -41,10 +49,11 @@ public class TitleShowcase implements Showcase {
                 Duration.ofSeconds(p0.fadeOut())
         );
 
-        for (var p : ctx.players()) {
-            if (!ctx.allowed(p)) continue;
-            p.showTitle(Title.title(t, s, times));
-        }
+        ctx.players().stream()
+                .filter(ctx::allowed)
+                .forEach(
+                        p -> p.showTitle(Title.title(t, s, times))
+                );
     }
 
     private static Parsed parse(Object raw) {
@@ -82,15 +91,20 @@ public class TitleShowcase implements Showcase {
     }
 
     private static long parseSeconds(Object o, long def) {
-        if (o == null) return def;
         if (o instanceof Number n) return n.longValue();
         try {
             return Long.parseLong(String.valueOf(o));
-        } catch (Exception ignored) {
+        } catch (NumberFormatException e) {
             return def;
         }
     }
 
-    private record Parsed(String title, String subtitle, long fadeIn, long stay, long fadeOut) {
+    private record Parsed(
+            String title,
+            String subtitle,
+            long fadeIn,
+            long stay,
+            long fadeOut
+    ) {
     }
 }

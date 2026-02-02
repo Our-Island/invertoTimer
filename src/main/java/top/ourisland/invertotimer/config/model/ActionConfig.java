@@ -8,6 +8,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Config record of actions.
+ *
+ * @param type the type of the action
+ * @param shift time shift
+ * @param options options of the action
+ */
 public record ActionConfig(
         String type,
         Duration shift,

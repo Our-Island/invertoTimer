@@ -5,6 +5,13 @@ import top.ourisland.invertotimer.config.SimpleYaml;
 import java.time.ZoneId;
 import java.util.Map;
 
+/**
+ * Global config record.
+ *
+ * @param lang the language that the plugin uses
+ * @param zoneId timezone that the timer will use
+ * @param limitation global whitelist/blacklist of the server
+ */
 public record GlobalConfig(
         String lang,
         ZoneId zoneId,

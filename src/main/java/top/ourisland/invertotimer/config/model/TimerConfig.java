@@ -7,6 +7,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Config record defining a timer instance.
+ *
+ * @param id the id of the timer
+ * @param description human-readable description
+ * @param cron cron5 specification
+ * @param time final time of the timer
+ * @param limitation whitelist/blacklist of the server
+ * @param showcases defined showcases
+ * @param actions defined actions
+ */
 public record TimerConfig(
         String id,
         String description,

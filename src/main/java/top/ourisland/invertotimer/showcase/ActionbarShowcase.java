@@ -1,19 +1,26 @@
 package top.ourisland.invertotimer.showcase;
 
-import com.velocitypowered.api.proxy.Player;
+import lombok.NonNull;
 import top.ourisland.invertotimer.runtime.I18n;
 import top.ourisland.invertotimer.runtime.RuntimeContext;
 
-import java.util.Objects;
 import java.util.function.Supplier;
 
+/**
+ * A showcase using actionbar to display information.
+ *
+ * @author Chiloven945
+ */
 public class ActionbarShowcase implements Showcase {
     private final RuntimeContext ctx;
     private final Supplier<Object> textSupplier;
 
-    public ActionbarShowcase(RuntimeContext ctx, Supplier<Object> textSupplier) {
-        this.ctx = Objects.requireNonNull(ctx);
-        this.textSupplier = Objects.requireNonNull(textSupplier);
+    public ActionbarShowcase(
+            @NonNull RuntimeContext ctx,
+            @NonNull Supplier<Object> textSupplier
+    ) {
+        this.ctx = ctx;
+        this.textSupplier = textSupplier;
     }
 
     @Override
@@ -29,9 +36,10 @@ public class ActionbarShowcase implements Showcase {
     @Override
     public void show() {
         final String raw = String.valueOf(textSupplier.get());
-        for (Player p : ctx.players()) {
-            if (!ctx.allowed(p)) continue;
-            p.sendActionBar(ctx.render(raw));
-        }
+        ctx.players().stream()
+                .filter(ctx::allowed)
+                .forEach(
+                        p -> p.sendActionBar(ctx.render(raw))
+                );
     }
 }

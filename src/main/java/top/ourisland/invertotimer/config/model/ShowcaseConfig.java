@@ -7,6 +7,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Config record for showcases.
+ *
+ * @param enabled  is enabled
+ * @param startAt  time that the showcase starts
+ * @param interval frequency that the showcase updates
+ * @param text     text to display
+ * @param color    color of the bossbar
+ * @param after    after operations
+ */
 public record ShowcaseConfig(
         boolean enabled,
         Duration startAt,
@@ -51,6 +61,15 @@ public record ShowcaseConfig(
         return new ShowcaseConfig(enabled, startAt, interval, text, color, after);
     }
 
-    public record After(Object text, Duration duration) {
+    /**
+     * Define the after behavior of the showcase.
+     *
+     * @param text     the text to display
+     * @param duration duration that the showcase will be viewable
+     */
+    public record After(
+            Object text,
+            Duration duration
+    ) {
     }
 }

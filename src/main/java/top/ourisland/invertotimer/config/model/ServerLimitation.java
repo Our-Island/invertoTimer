@@ -37,5 +37,8 @@ public class ServerLimitation {
         return (mode == Mode.BLACKLIST) != contains;
     }
 
-    public enum Mode {BLACKLIST, WHITELIST}
+    public enum Mode {
+        BLACKLIST,
+        WHITELIST
+    }
 }

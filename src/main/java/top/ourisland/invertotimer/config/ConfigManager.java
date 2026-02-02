@@ -1,5 +1,6 @@
 package top.ourisland.invertotimer.config;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import top.ourisland.invertotimer.config.model.GlobalConfig;
 import top.ourisland.invertotimer.config.model.TimerConfig;
@@ -16,6 +17,7 @@ public class ConfigManager {
     private final Logger logger;
     private final Path dataDir;
 
+    @Getter
     private GlobalConfig globalConfig = GlobalConfig.defaults();
     private Map<String, TimerConfig> timers = new LinkedHashMap<>();
 
@@ -51,7 +53,7 @@ public class ConfigManager {
             Files.copy(in, dest);
             logger.info("Generated default {}", dest.getFileName());
         } catch (IOException e) {
-            logger.error("Failed to generate default " + filename, e);
+            logger.error("Failed to generate default {}", filename, e);
         }
     }
 
@@ -95,10 +97,6 @@ public class ConfigManager {
             logger.error("Failed to load timer.yml", e);
             return new LinkedHashMap<>();
         }
-    }
-
-    public GlobalConfig getGlobalConfig() {
-        return globalConfig;
     }
 
     public Map<String, TimerConfig> getTimers() {

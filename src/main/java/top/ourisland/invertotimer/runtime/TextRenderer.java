@@ -3,6 +3,7 @@ package top.ourisland.invertotimer.runtime;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,7 +12,7 @@ public final class TextRenderer {
     private TextRenderer() {
     }
 
-    public static Component renderToComponent(String input, java.util.function.Function<String, String> placeholderFn) {
+    public static Component renderToComponent(String input, Function<String, String> placeholderFn) {
         if (input == null) input = "";
 
         String s = replaceI18n(input);

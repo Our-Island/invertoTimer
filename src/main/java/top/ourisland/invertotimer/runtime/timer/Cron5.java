@@ -11,7 +11,13 @@ public class Cron5 {
     private final Field month;
     private final Field dayOfWeek;
 
-    private Cron5(Field minute, Field hour, Field dayOfMonth, Field month, Field dayOfWeek) {
+    private Cron5(
+            Field minute,
+            Field hour,
+            Field dayOfMonth,
+            Field month,
+            Field dayOfWeek
+    ) {
         this.minute = minute;
         this.hour = hour;
         this.dayOfMonth = dayOfMonth;
@@ -34,7 +40,6 @@ public class Cron5 {
 
     public ZonedDateTime nextAfter(final ZonedDateTime after) {
         ZonedDateTime t = after.plusMinutes(1).withSecond(0).withNano(0);
-        // brute-force up to 10 years (enough for yearly jobs)
         for (int i = 0; i < 60 * 24 * 366 * 10; i++) {
             if (matches(t)) return t;
             t = t.plusMinutes(1);

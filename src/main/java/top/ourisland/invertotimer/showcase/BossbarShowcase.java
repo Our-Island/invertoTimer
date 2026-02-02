@@ -1,6 +1,7 @@
 package top.ourisland.invertotimer.showcase;
 
 import com.velocitypowered.api.proxy.Player;
+import lombok.NonNull;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import top.ourisland.invertotimer.runtime.I18n;
@@ -9,6 +10,11 @@ import top.ourisland.invertotimer.runtime.RuntimeContext;
 import java.util.Locale;
 import java.util.function.Supplier;
 
+/**
+ * A showcase using bossbar to display information.
+ *
+ * @author Chiloven945
+ */
 public class BossbarShowcase implements Showcase {
     private final RuntimeContext ctx;
     private final Supplier<Object> textSupplier;
@@ -35,8 +41,7 @@ public class BossbarShowcase implements Showcase {
         );
     }
 
-    private static BossBar.Color parseColor(String s) {
-        if (s == null) return BossBar.Color.BLUE;
+    private static BossBar.Color parseColor(@NonNull String s) {
         return switch (s.toLowerCase(Locale.ROOT)) {
             case "pink" -> BossBar.Color.PINK;
             case "red" -> BossBar.Color.RED;

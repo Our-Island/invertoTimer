@@ -80,7 +80,6 @@ public class InvertoTimer {
         logger.info("invertoTimer reloaded: {} timer(s).", configManager.getTimers().size());
     }
 
-    // ===== Command =====
     private record RootCommand(InvertoTimer plugin) implements SimpleCommand {
 
         @Override

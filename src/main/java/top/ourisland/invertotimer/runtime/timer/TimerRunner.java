@@ -40,7 +40,7 @@ public class TimerRunner {
     public synchronized void reloadFromConfig() {
         instances.values().forEach(TimerInstance::dispose);
 
-        this.global = configs.getGlobalConfig();
+        this.global = configs.globalConfig();
         this.timerConfigs = configs.getTimers();
 
         instances.clear();
@@ -88,5 +88,4 @@ public class TimerRunner {
         final Player p = e.getPlayer();
         for (TimerInstance inst : instances.values()) inst.hideFor(p);
     }
-
 }

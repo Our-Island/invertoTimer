@@ -1,5 +1,6 @@
 package top.ourisland.invertotimer.action;
 
+import lombok.NonNull;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import top.ourisland.invertotimer.runtime.I18n;
@@ -9,8 +10,12 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
+/**
+ * An action for text displaying.
+ *
+ * @author Chiloven945
+ */
 public class TextAction implements Action {
     private final RuntimeContext ctx;
     private final TextType textType;
@@ -24,9 +29,13 @@ public class TextAction implements Action {
     private final Duration stay;
     private final Duration fadeOut;
 
-    public TextAction(RuntimeContext ctx, TextType textType, Object infoRaw) {
-        this.ctx = Objects.requireNonNull(ctx);
-        this.textType = Objects.requireNonNull(textType);
+    public TextAction(
+            @NonNull RuntimeContext ctx,
+            @NonNull TextType textType,
+            Object infoRaw
+    ) {
+        this.ctx = ctx;
+        this.textType = textType;
 
         Duration fi = null, st = null, fo = null;
 
@@ -140,5 +149,10 @@ public class TextAction implements Action {
         }
     }
 
-    public enum TextType {MESSAGE, ACTIONBAR, TITLE, SUBTITLE}
+    public enum TextType {
+        MESSAGE,
+        ACTIONBAR,
+        TITLE,
+        SUBTITLE
+    }
 }

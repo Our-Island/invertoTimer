@@ -1,19 +1,29 @@
 package top.ourisland.invertotimer.action;
 
+import lombok.NonNull;
 import top.ourisland.invertotimer.runtime.I18n;
 import top.ourisland.invertotimer.runtime.RuntimeContext;
 
-import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * An action for command execution. Executor and RegEx filter can be specified.
+ *
+ * @author Chiloven945
+ */
 public class CommandAction implements Action {
     private final RuntimeContext ctx;
     private final Executor executor;
     private final String command;
     private final Pattern match;
 
-    public CommandAction(RuntimeContext ctx, Executor executor, String command, String matchRegex) {
-        this.ctx = Objects.requireNonNull(ctx);
+    public CommandAction(
+            @NonNull RuntimeContext ctx,
+            Executor executor,
+            String command,
+            String matchRegex
+    ) {
+        this.ctx = ctx;
         this.executor = executor == null ? Executor.PLAYER : executor;
         this.command = command == null ? "" : command;
 
@@ -22,7 +32,6 @@ public class CommandAction implements Action {
             try {
                 compiled = Pattern.compile(matchRegex);
             } catch (Exception ignored) {
-                compiled = null;
             }
         }
         this.match = compiled;
@@ -65,5 +74,8 @@ public class CommandAction implements Action {
         return s;
     }
 
-    public enum Executor {CONSOLE, PLAYER}
+    public enum Executor {
+        CONSOLE,
+        PLAYER
+    }
 }
