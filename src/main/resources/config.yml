@@ -20,8 +20,9 @@ lang: "en_us"
 # Timers using cron/time are evaluated in this timezone.
 # Valid values are Java ZoneId strings, e.g.:
 #   "Asia/Shanghai", "UTC", "Europe/Paris"
+# See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # ------------------------------------------------------------
-timezone: "Asia/Shanghai"
+timezone: "Etc/UTC"
 
 # ------------------------------------------------------------
 # Global server limitation (applied BEFORE each timer's limitation).

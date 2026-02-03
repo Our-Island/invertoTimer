@@ -1,0 +1,43 @@
+# ============================================================
+# Configured animations
+# ============================================================
+# Use in timer texts with placeholder: {animation:<id>}
+#
+# Notes:
+# - All frame texts support the same placeholders as timer.yml, e.g. {remaining}, {days}, etc.
+# - Frame texts also support {i18n:key} and MiniMessage formatting.
+# - Animations loop forever based on real time.
+#
+# Two formats are supported:
+#
+# 1) Simple (uniform interval for each frame):
+#    <id>:
+#      interval: 0.5
+#      text:
+#        - "frame 1"
+#        - "frame 2"
+#
+# 2) Advanced (per-frame duration):
+#    <id>:
+#      frames:
+#        - duration: 0.5
+#          text: "frame 1"
+#        - duration: 1
+#          text: "frame 2"
+# ============================================================
+animations:
+  # ----------------------------------------------------------
+  # Animation id (used in timer text)
+  # ----------------------------------------------------------
+  new-year-bossbar:
+    interval: 0.5
+    text:
+      - "Happy New Year!"
+      - "New Year in {remaining}"
+
+  new-year-bossbar2:
+    frames:
+      - duration: 0.5
+        text: "Happy New Year!"
+      - duration: 1
+        text: "Happy!"

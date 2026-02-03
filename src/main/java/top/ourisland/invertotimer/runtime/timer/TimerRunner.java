@@ -13,8 +13,9 @@ import top.ourisland.invertotimer.config.ConfigManager;
 import top.ourisland.invertotimer.config.model.GlobalConfig;
 import top.ourisland.invertotimer.config.model.TimerConfig;
 
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class TimerRunner {
@@ -29,7 +30,12 @@ public class TimerRunner {
     private volatile Map<String, TimerConfig> timerConfigs;
     private ScheduledTask tickTask;
 
-    public TimerRunner(final InvertoTimer plugin, final ProxyServer proxy, final Logger logger, final ConfigManager configs) {
+    public TimerRunner(
+            final InvertoTimer plugin,
+            final ProxyServer proxy,
+            final Logger logger,
+            final ConfigManager configs
+    ) {
         this.plugin = plugin;
         this.proxy = proxy;
         this.logger = logger;
@@ -45,7 +51,14 @@ public class TimerRunner {
 
         instances.clear();
         for (String id : timerConfigs.keySet()) {
-            instances.put(id, new TimerInstance(plugin, proxy, logger, timerConfigs.get(id), global.zoneId()));
+            instances.put(id, new TimerInstance(
+                    plugin,
+                    proxy,
+                    logger,
+                    configs,
+                    timerConfigs.get(id),
+                    global.zoneId())
+            );
         }
     }
 
