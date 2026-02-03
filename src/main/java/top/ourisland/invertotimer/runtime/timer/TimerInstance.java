@@ -9,8 +9,8 @@ import top.ourisland.invertotimer.InvertoTimer;
 import top.ourisland.invertotimer.action.Action;
 import top.ourisland.invertotimer.config.ConfigManager;
 import top.ourisland.invertotimer.config.model.*;
+import top.ourisland.invertotimer.runtime.PlaceholderEngine;
 import top.ourisland.invertotimer.runtime.RuntimeContext;
-import top.ourisland.invertotimer.runtime.TextRenderer;
 import top.ourisland.invertotimer.runtime.action.ActionFactory;
 import top.ourisland.invertotimer.runtime.showcase.ShowcaseFactory;
 import top.ourisland.invertotimer.runtime.showcase.ShowcaseSlot;
@@ -18,14 +18,11 @@ import top.ourisland.invertotimer.runtime.showcase.ShowcaseType;
 import top.ourisland.invertotimer.showcase.BossbarShowcase;
 import top.ourisland.invertotimer.showcase.Showcase;
 import top.ourisland.invertotimer.util.Cron5;
-import top.ourisland.invertotimer.util.TimeUtil;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 final class TimerInstance {
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -41,20 +38,16 @@ final class TimerInstance {
 
     private final List<ScheduledTask> actionTasks = new ArrayList<>();
     private final Map<String, ShowcaseSlot> showcaseSlots = new HashMap<>();
-
+    private final PlaceholderEngine placeholders;
     private Instant expireAt = Instant.EPOCH;
-
     private Cron5 cron;
     private LocalDateTime oneTime;
     private ZonedDateTime nextTarget;
-
     private volatile GlobalConfig lastGlobal;
     private volatile Instant lastNow;
-
     private BossbarShowcase bossbarShowcase;
     private ShowcaseSlot bossbarSlot;
     private ShowcaseConfig bossBarConfig;
-
     private RuntimeContext ctx;
 
     TimerInstance(
@@ -69,6 +62,7 @@ final class TimerInstance {
         this.proxy = proxy;
         this.logger = logger;
         this.configManager = configManager;
+        this.placeholders = new PlaceholderEngine(configManager);
         this.cfg = cfg;
         this.zoneId = zoneId;
 
@@ -99,7 +93,8 @@ final class TimerInstance {
         this.ctx = new RuntimeContext(
                 proxy,
                 this::isPlayerAllowedUsingLastGlobal,
-                s -> applyPlaceholders(s, lastNow == null ? Instant.now() : lastNow),
+                placeholders,
+                () -> buildPlaceholderContext(lastNow == null ? Instant.now() : lastNow),
                 logger
         );
     }
@@ -162,34 +157,19 @@ final class TimerInstance {
         return isPlayerAllowed(p, g);
     }
 
-    private String applyPlaceholders(final String text, final Instant now) {
+    private PlaceholderEngine.Context buildPlaceholderContext(final Instant now) {
         final long remainingSec = nextTarget == null ? 0 :
-                Math.max(0, Duration.between(now, nextTarget.toInstant()).getSeconds());
+                Math.max(0, java.time.Duration.between(now, nextTarget.toInstant()).getSeconds());
 
-        long days = remainingSec / 86400;
-        long rem = remainingSec % 86400;
-        long hours = rem / 3600;
-        rem %= 3600;
-        long minutes = rem / 60;
-        long seconds = rem % 60;
-
-        String out = text == null ? "" : text;
-
-        // {animation:<id>} placeholder (defined in animations.yml)
-        out = replaceAnimations(out, now);
-
-        out = out.replace("{id}", cfg.id());
-        out = out.replace("{description}", cfg.description());
-        out = out.replace("{remaining}", TimeUtil.formatHMS(remainingSec));
-        out = out.replace("{days}", String.valueOf(days));
-        out = out.replace("{hours}", String.valueOf(hours));
-        out = out.replace("{minutes}", String.valueOf(minutes));
-        out = out.replace("{seconds}", String.valueOf(seconds));
-        out = out.replace("{total_seconds}", String.valueOf(remainingSec));
-        if (nextTarget != null) out = out.replace("{target}", nextTarget.toString());
-
-        // animations may introduce {i18n:key} tokens, run i18n pass again to cover them
-        return TextRenderer.replaceI18n(out);
+        final String targetText = nextTarget == null ? "" : TIME_FMT.format(nextTarget);
+        return new PlaceholderEngine.Context(
+                cfg.id(),
+                cfg.description(),
+                now,
+                nextTarget,
+                targetText,
+                remainingSec
+        );
     }
 
     private void cancelActionTasks() {
@@ -259,21 +239,6 @@ final class TimerInstance {
 
         if (!global.limitation().isAllowed(serverName)) return false;
         return cfg.limitation().isAllowed(serverName);
-    }
-
-    private String replaceAnimations(final String in, final Instant now) {
-        if (in == null || in.isEmpty()) return "";
-        final Matcher m = Pattern.compile("\\{animation:([a-zA-Z0-9_.-]+)}").matcher(in);
-        if (!m.find()) return in;
-
-        final StringBuilder sb = new StringBuilder();
-        do {
-            final String id = m.group(1);
-            final String frame = animationFrameText(id, now);
-            m.appendReplacement(sb, Matcher.quoteReplacement(frame));
-        } while (m.find());
-        m.appendTail(sb);
-        return sb.toString();
     }
 
     private String animationFrameText(final String id, final Instant now) {

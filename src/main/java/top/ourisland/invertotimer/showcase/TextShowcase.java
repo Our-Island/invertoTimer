@@ -39,7 +39,7 @@ public class TextShowcase implements Showcase {
         ctx.players().stream()
                 .filter(ctx::allowed)
                 .forEach(
-                        p -> p.sendMessage(ctx.render(raw))
+                        p -> p.sendMessage(ctx.render(p, raw))
                 );
     }
 }

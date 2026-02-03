@@ -1,5 +1,6 @@
 package top.ourisland.invertotimer.showcase;
 
+import com.velocitypowered.api.proxy.Player;
 import lombok.NonNull;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
@@ -40,20 +41,20 @@ public class TitleShowcase implements Showcase {
     public void show() {
         Parsed p0 = parse(textSupplier.get());
 
-        Component t = ctx.render(p0.title());
-        Component s = ctx.render(p0.subtitle());
-
         Title.Times times = Title.Times.times(
                 Duration.ofSeconds(p0.fadeIn()),
                 Duration.ofSeconds(p0.stay()),
                 Duration.ofSeconds(p0.fadeOut())
         );
 
-        ctx.players().stream()
-                .filter(ctx::allowed)
-                .forEach(
-                        p -> p.showTitle(Title.title(t, s, times))
-                );
+        for (Player p : ctx.players()) {
+            if (!ctx.allowed(p)) continue;
+
+            Component t = ctx.render(p, p0.title());
+            Component s = ctx.render(p, p0.subtitle());
+
+            p.showTitle(Title.title(t, s, times));
+        }
     }
 
     private static Parsed parse(Object raw) {

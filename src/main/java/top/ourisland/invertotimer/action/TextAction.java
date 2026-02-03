@@ -129,11 +129,11 @@ public class TextAction implements Action {
             if (!ctx.allowed(p)) continue;
 
             switch (textType) {
-                case ACTIONBAR -> p.sendActionBar(ctx.render(info));
-                case MESSAGE -> p.sendMessage(ctx.render(info));
+                case ACTIONBAR -> p.sendActionBar(ctx.render(p, info));
+                case MESSAGE -> p.sendMessage(ctx.render(p, info));
                 case TITLE, SUBTITLE -> {
-                    Component t = ctx.render(title);
-                    Component s = ctx.render(subtitle);
+                    Component t = ctx.render(p, title);
+                    Component s = ctx.render(p, subtitle);
 
                     if (fadeIn != null || stay != null || fadeOut != null) {
                         Duration fi = fadeIn != null ? fadeIn : Duration.of(0, ChronoUnit.SECONDS);
