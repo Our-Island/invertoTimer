@@ -1,119 +1,45 @@
 # ============================================================
 # Configured timers
+# https://github.com/Our-Island/invertoTimer/wiki/Timers
 # ============================================================
 timers:
 
-  # ----------------------------------------------------------
-  # Timer id (used in commands, placeholders {id}, etc.)
-  # ----------------------------------------------------------
   new-year:
-
-    # Human readable description (placeholder: {description})
     description: "New year timer."
-
-    # --------------------------------------------------------
-    # Per-timer server limitation.
-    # Applied AFTER global limitation.
-    # --------------------------------------------------------
     limitation:
       mode: blacklist
       list:
         - game1
         - test1
-
-    # --------------------------------------------------------
-    # Choose ONE: cron OR time
-    #
-    # cron: 5-field cron format (min hour day month week)
-    # Example below means: every Jan 1st 00:00 (in configured timezone)
-    #
-    # time: one-time absolute time (yyyy-MM-dd HH:mm:ss)
-    # If time is in the past, this timer will not run again.
-    # --------------------------------------------------------
     cron: "0 0 1 1 *"
-    # time: "2026-01-01 00:00:00"
-
-    # ========================================================
-    # SHOWCASES (periodic displays to players)
-    #
-    # All showcase texts support:
-    #   1) {i18n:key}  -> replaced by language file value
-    #   2) Placeholders:
-    #        {remaining} {days} {hours} {minutes} {seconds}
-    #        {total_seconds} {id} {description} {target}
-    #        {animation:<id>} -> play an animation defined in animations.yml
-    #   3) MiniMessage formatting:
-    #        <red>text</red>, <gold>, <gradient:...>, etc.
-    #
-    # start-at:
-    #   When to start showing BEFORE the target time.
-    #   Examples: 10m, 30s, 1h, 1d
-    #
-    # interval:
-    #   How often to update/show.
-    #   Examples: 1s, 5s, 30s, 1m
-    #
-    # NOTE:
-    #   - bossbar progress is based on start-at:
-    #       start-at 1h -> bossbar progress decreases from 1.0 to 0.0 in that 1 hour.
-    #   - If start-at is omitted, it starts immediately once the timer has a next target.
-    # ========================================================
+    # --------------------------------------------------------
+    # SHOWCASES
+    # https://github.com/Our-Island/invertoTimer/wiki/Showcases
+    # --------------------------------------------------------
     showcases:
 
-      # ------------------------------------------------------
-      # actionbar showcase
-      # ------------------------------------------------------
       actionbar:
         start-at: 1h
         interval: 1s
-        # Example with MiniMessage + placeholders:
-        # text: "<yellow>New Year in</yellow> <white>{remaining}</white>"
         text: "New Year in {remaining}"
         after:
           text: "Happy New Year!"
           duration: 10m
 
-      # ------------------------------------------------------
-      # bossbar showcase
-      #
-      # color (optional):
-      #   BossBar color name (case-insensitive).
-      #   Supported values:
-      #     pink | blue | red | green | yellow | purple | white
-      #   If omitted or invalid, defaults to blue.
-      # ------------------------------------------------------
       bossbar:
         start-at: 1h
         interval: 1s
         color: red
-        # You can also use i18n:
-        # text: "<gradient:gold:yellow>{i18n:timer.newyear.bossbar}</gradient> <white>{remaining}</white>"
         text: "New Year in {remaining}"
         after:
           text: "Happy New Year!"
           duration: 10m
 
-      # ------------------------------------------------------
-      # text showcase (chat message)
-      # ------------------------------------------------------
       text:
         start-at: 10m
         interval: 30s
         text: "[Timer] {remaining} left"
 
-      # ------------------------------------------------------
-      # title showcase (NEW MECHANISM)
-      #
-      # Only ONE key: "title"
-      # It can contain BOTH:
-      #   - title:    main title text
-      #   - subtitle: subtitle text
-      #
-      # This replaces the old design where you had:
-      #   showcases.title and showcases.subtitle as two separate showcases.
-      #
-      # Both fields support i18n/placeholders/minimessage.
-      # ------------------------------------------------------
       title:
         start-at: 10m
         interval: 5s
@@ -123,98 +49,39 @@ timers:
           - "0"
           - "2"
           - "0"
-      after:
-        text:
-          - "Happy New Year!"
-          - "Yay!"
-          - "0"
-          - "2"
-          - "0"
-        duration: 30s
+        after:
+          text:
+            - "Happy New Year!"
+            - "Yay!"
+            - "0"
+            - "2"
+            - "0"
+          duration: 30s
 
-    # ========================================================
-    # ACTIONS (one-shot triggers at specified time offsets)
-    #
-    # shift:
-    #   Time offset relative to target time.
-    #   Negative = BEFORE target, Positive = AFTER target.
-    #   Examples: -30m, -15m, 0s, 5s, 1m
-    #
-    # Supported action types:
-    #   - text
-    #   - transfer
-    #   - command
-    #
-    # Text action supports:
-    #   options.text-type:
-    #     message | actionbar | title | subtitle
-    #
-    # options.info:
-    #   - For message/actionbar: String
-    #   - For title/subtitle:
-    #       1) String:
-    #            text-type: title    -> title = info,    subtitle = ""
-    #            text-type: subtitle -> title = "",      subtitle = info
-    #
-    #       2) Array/List (recommended):
-    #            info: [title, subtitle, fadeIn, stay, fadeOut]
-    #
-    #          Index mapping:
-    #            0 -> title text
-    #            1 -> subtitle text
-    #            2 -> fadeIn seconds  (optional)
-    #            3 -> stay seconds    (optional)
-    #            4 -> fadeOut seconds (optional)
-    #
-    #          Times are in seconds, for Title.Times.times(...)
-    #          Missing entries fall back to defaults:
-    #            fadeIn = 0s, stay = 2s, fadeOut = 0s
-    #
-    # Text content supports:
-    #   i18n/placeholders/minimessage (same as showcases)
-    # ========================================================
+    # --------------------------------------------------------
+    # ACTIONS
+    # https://github.com/Our-Island/invertoTimer/wiki/Actions
+    # --------------------------------------------------------
     actions:
 
-      # ------------------------------------------------------
-      # Send a chat message 30 minutes before target
-      # ------------------------------------------------------
       - type: text
         shift: -30m
         options:
           text-type: message
           info: "<green>Ready?</green>"
 
-      # ------------------------------------------------------
-      # Transfer matched players 15 minutes before target
-      #
-      # transferee:
-      #   Java regex to match online player usernames (matches()).
-      #   Use ".*" to match all players.
-      # ------------------------------------------------------
       - type: transfer
         shift: -15m
         options:
-          # target backend server name in Velocity
           target: hub
           transferee: ".*"
 
-      # ------------------------------------------------------
-      # Subtitle-only example:
-      #   text-type: subtitle + String
-      #   -> title = "", subtitle = info
-      # ------------------------------------------------------
       - type: text
         shift: -10s
         options:
           text-type: subtitle
           info: "<gray>Get ready...</gray>"
 
-      # ------------------------------------------------------
-      # Show a title at the target moment
-      #
-      # info array (title/subtitle + times):
-      #   [title, subtitle, fadeInSeconds, staySeconds, fadeOutSeconds]
-      # ------------------------------------------------------
       - type: text
         shift: 0s
         options:
@@ -226,23 +93,6 @@ timers:
             - "2"
             - "0"
 
-      # ------------------------------------------------------
-      # Execute a command 5 seconds after target
-      #
-      # executor:
-      #   - console: executed by proxy console (match ignored)
-      #   - player : executed by matched online players
-      #
-      # match (only for executor=player):
-      #   Java regex to match online player usernames.
-      #   Examples:
-      #     ".*"               -> all online players
-      #     "^Steve_.*$"       -> usernames starting with Steve_
-      #     "^(Alice|Bob)$"    -> only Alice or Bob
-      #
-      # NOTE:
-      #   - command is treated as plain String; do NOT use MiniMessage here.
-      # ------------------------------------------------------
       - type: command
         shift: 5s
         options:

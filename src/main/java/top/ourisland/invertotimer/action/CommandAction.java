@@ -54,17 +54,22 @@ public class CommandAction implements Action {
 
     @Override
     public void execute() {
-        final String cmd = ctx.renderString(command).trim();
-        if (cmd.isBlank()) return;
-
         switch (executor) {
-            case CONSOLE -> ctx.proxy().getCommandManager().executeAsync(
-                    ctx.proxy().getConsoleCommandSource(), trimLeadingSlash(cmd)
-            );
+            case CONSOLE -> {
+                final String cmd = ctx.renderString(command).trim();
+                if (cmd.isBlank()) return;
+                ctx.proxy().getCommandManager().executeAsync(
+                        ctx.proxy().getConsoleCommandSource(), trimLeadingSlash(cmd)
+                );
+            }
             case PLAYER -> ctx.players().stream()
                     .filter(ctx::allowed)
                     .filter(p -> match == null || match.matcher(p.getUsername()).matches())
-                    .forEach(p -> p.spoofChatInput(cmd));
+                    .forEach(p -> {
+                        final String cmd = ctx.renderString(p, command).trim();
+                        if (cmd.isBlank()) return;
+                        p.spoofChatInput(cmd);
+                    });
         }
     }
 

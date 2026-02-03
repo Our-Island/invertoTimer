@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 /**
- * A showcase using bossbar to display information.
+ * A showcase using a bossbar to display information.
  *
  * @author Chiloven945
  */
@@ -65,26 +65,28 @@ public class BossbarShowcase implements Showcase {
 
     @Override
     public void show() {
-        bossBar.name(ctx.render(String.valueOf(textSupplier.get())));
+        float prog = progressSupplier.get();
+        if (prog < 0f) prog = 0f;
+        if (prog > 1f) prog = 1f;
+        bossBar.progress(prog);
 
-        float p = progressSupplier.get();
-        if (p < 0f) p = 0f;
-        if (p > 1f) p = 1f;
-        bossBar.progress(p);
+        final String raw = String.valueOf(textSupplier.get());
 
-        for (Player p0 : ctx.players()) {
-            if (!ctx.allowed(p0)) {
-                p0.hideBossBar(bossBar);
+        for (Player p : ctx.players()) {
+            if (!ctx.allowed(p)) {
+                p.hideBossBar(bossBar);
                 continue;
             }
-            p0.showBossBar(bossBar);
+
+            bossBar.name(ctx.render(p, raw));
+            p.showBossBar(bossBar);
         }
     }
 
     public void showTo(Player p) {
         if (!ctx.allowed(p)) return;
 
-        bossBar.name(ctx.render(String.valueOf(textSupplier.get())));
+        bossBar.name(ctx.render(p, String.valueOf(textSupplier.get())));
 
         float prog = progressSupplier.get();
         if (prog < 0f) prog = 0f;

@@ -39,7 +39,7 @@ public class ActionbarShowcase implements Showcase {
         ctx.players().stream()
                 .filter(ctx::allowed)
                 .forEach(
-                        p -> p.sendActionBar(ctx.render(raw))
+                        p -> p.sendActionBar(ctx.render(p, raw))
                 );
     }
 }

@@ -51,7 +51,7 @@ public record AnimationConfig(
                 if (!(o instanceof Map<?, ?> fm)) continue;
 
                 double durSec = YamlUtil.getDouble(fm, "duration", 1.0);
-                long durMs = Math.max(1, (long) Math.round(durSec * 1000.0));
+                long durMs = Math.max(1, Math.round(durSec * 1000.0));
                 String text = YamlUtil.getString(fm, "text", "");
 
                 frames.add(new Frame(durMs, text));
