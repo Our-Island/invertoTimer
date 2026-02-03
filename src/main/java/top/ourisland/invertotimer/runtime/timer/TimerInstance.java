@@ -7,11 +7,10 @@ import lombok.NonNull;
 import org.slf4j.Logger;
 import top.ourisland.invertotimer.InvertoTimer;
 import top.ourisland.invertotimer.action.Action;
-import top.ourisland.invertotimer.config.model.ActionConfig;
-import top.ourisland.invertotimer.config.model.GlobalConfig;
-import top.ourisland.invertotimer.config.model.ShowcaseConfig;
-import top.ourisland.invertotimer.config.model.TimerConfig;
+import top.ourisland.invertotimer.config.ConfigManager;
+import top.ourisland.invertotimer.config.model.*;
 import top.ourisland.invertotimer.runtime.RuntimeContext;
+import top.ourisland.invertotimer.runtime.TextRenderer;
 import top.ourisland.invertotimer.runtime.action.ActionFactory;
 import top.ourisland.invertotimer.runtime.showcase.ShowcaseFactory;
 import top.ourisland.invertotimer.runtime.showcase.ShowcaseSlot;
@@ -25,6 +24,8 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 final class TimerInstance {
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -34,6 +35,7 @@ final class TimerInstance {
     private final ProxyServer proxy;
     private final Logger logger;
 
+    private final ConfigManager configManager;
     private final TimerConfig cfg;
     private final ZoneId zoneId;
 
@@ -59,12 +61,14 @@ final class TimerInstance {
             @NonNull final InvertoTimer plugin,
             final ProxyServer proxy,
             final Logger logger,
+            final ConfigManager configManager,
             final TimerConfig cfg,
             final ZoneId zoneId
     ) {
         this.plugin = plugin;
         this.proxy = proxy;
         this.logger = logger;
+        this.configManager = configManager;
         this.cfg = cfg;
         this.zoneId = zoneId;
 
@@ -170,6 +174,10 @@ final class TimerInstance {
         long seconds = rem % 60;
 
         String out = text == null ? "" : text;
+
+        // {animation:<id>} placeholder (defined in animations.yml)
+        out = replaceAnimations(out, now);
+
         out = out.replace("{id}", cfg.id());
         out = out.replace("{description}", cfg.description());
         out = out.replace("{remaining}", TimeUtil.formatHMS(remainingSec));
@@ -179,7 +187,9 @@ final class TimerInstance {
         out = out.replace("{seconds}", String.valueOf(seconds));
         out = out.replace("{total_seconds}", String.valueOf(remainingSec));
         if (nextTarget != null) out = out.replace("{target}", nextTarget.toString());
-        return out;
+
+        // animations may introduce {i18n:key} tokens, run i18n pass again to cover them
+        return TextRenderer.replaceI18n(out);
     }
 
     private void cancelActionTasks() {
@@ -249,6 +259,44 @@ final class TimerInstance {
 
         if (!global.limitation().isAllowed(serverName)) return false;
         return cfg.limitation().isAllowed(serverName);
+    }
+
+    private String replaceAnimations(final String in, final Instant now) {
+        if (in == null || in.isEmpty()) return "";
+        final Matcher m = Pattern.compile("\\{animation:([a-zA-Z0-9_.-]+)}").matcher(in);
+        if (!m.find()) return in;
+
+        final StringBuilder sb = new StringBuilder();
+        do {
+            final String id = m.group(1);
+            final String frame = animationFrameText(id, now);
+            m.appendReplacement(sb, Matcher.quoteReplacement(frame));
+        } while (m.find());
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    private String animationFrameText(final String id, final Instant now) {
+        if (id == null || id.isBlank()) return "";
+        final AnimationConfig anim = configManager.animations().get(id);
+        if (anim == null) return "";
+
+        final List<AnimationConfig.Frame> frames = anim.frames();
+        if (frames == null || frames.isEmpty()) return "";
+
+        final long total = Math.max(1, anim.totalDurationMs());
+        final long pos = Math.floorMod(now.toEpochMilli(), total);
+
+        long acc = 0;
+        for (AnimationConfig.Frame f : frames) {
+            acc += Math.max(1, f.durationMs());
+            if (pos < acc) {
+                return f.text() == null ? "" : f.text();
+            }
+        }
+
+        AnimationConfig.Frame last = frames.getLast();
+        return last.text() == null ? "" : last.text();
     }
 
     void tick(final Instant now, final GlobalConfig global) {

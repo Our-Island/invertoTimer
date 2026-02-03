@@ -41,6 +41,7 @@ timers:
     #   2) Placeholders:
     #        {remaining} {days} {hours} {minutes} {seconds}
     #        {total_seconds} {id} {description} {target}
+    #        {animation:<id>} -> play an animation defined in animations.yml
     #   3) MiniMessage formatting:
     #        <red>text</red>, <gold>, <gradient:...>, etc.
     #
@@ -241,7 +242,6 @@ timers:
       #
       # NOTE:
       #   - command is treated as plain String; do NOT use MiniMessage here.
-      #   - placeholders like {id} {remaining} etc depend on your renderString() policy.
       # ------------------------------------------------------
       - type: command
         shift: 5s

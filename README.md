@@ -11,7 +11,7 @@
 
 invertoTimer is a lightweight Velocity plugin for global countdowns and scheduled server-wide events.  
 It’s designed for “whole network” moments such as New Year, grand openings, maintenance reminders, and other
-timed announcements — with configurable timers, multiple display modes, and flexible actions.
+timed announcements — with configurable timers, multiple display modes, flexible actions, and text animations.
 
 ---
 
@@ -25,11 +25,13 @@ invertoTimer provides:
 - Server limitations (**global + per-timer**) to include/exclude specific backend servers
 - i18n language files and **MiniMessage** formatting for player-visible text
 - `{i18n:key}` tokens for translating player-visible texts
+- `{animation:<id>}` placeholder to render animated text defined in `animations.yml`
 
-The plugin uses two config files:
+The plugin uses three config files:
 
 - `config.yml`: global settings (language, timezone, global limitation, etc.)
 - `timer.yml`: timer definitions (timers, showcases, actions)
+- `animations.yml`: animation definitions used by `{animation:<id>}`
 
 ---
 
@@ -91,6 +93,10 @@ These are replaced for countdown-related texts:
 - `{days}` `{hours}` `{minutes}` `{seconds}`
 - `{total_seconds}`
 - `{target}` target time string
+- `{animation:<id>}` render an animation frame (see **Animations**)
+
+> `{animation:<id>}` can be used anywhere a normal text string is rendered (showcases, `after.text`, text actions,
+> etc.).
 
 ### 3) MiniMessage formatting
 
@@ -99,6 +105,77 @@ Player-visible texts support MiniMessage tags such as:
 - `<red>text</red>`
 - `<gold>`, `<yellow>`, `<gray>`
 - `<gradient:red:yellow>...</gradient>`
+
+---
+
+## Animations
+
+Animations are defined in `animations.yml` and referenced using:
+
+```yml
+{ animation:<id> }
+```
+
+An animation produces a piece of text that changes over time (frames).  
+The resulting frame text is then rendered like normal text, meaning it can also contain `{remaining}`, `{i18n:...}` and
+MiniMessage tags.
+
+### `animations.yml` format
+
+Top-level key:
+
+- `animations:` map of animation ids → definitions
+
+Two supported definition styles:
+
+#### A) Simple fixed-interval frames
+
+```yml
+# ============================================================
+# Configured animations
+# ============================================================
+animations:
+  # ----------------------------------------------------------
+  # Animation id (used in timer text)
+  # ----------------------------------------------------------
+  new-year-bossbar:
+    # Frame interval in seconds
+    interval: 0.5
+    # List of frames (cycled)
+    text:
+      - "Happy New Year!"
+      - "New Year in {remaining}"
+```
+
+#### B) Per-frame duration
+
+```yml
+animations:
+  new-year-bossbar2:
+    # Explicit frames with individual durations (seconds)
+    frames:
+      - duration: 0.5
+        text: "Happy New Year!"
+      - duration: 1
+        text: "Happy!"
+```
+
+### Using animations in timers
+
+Example (bossbar text uses an animation):
+
+```yml
+timers:
+  new-year:
+    description: "New year timer."
+    cron: "0 0 1 1 *"
+    showcases:
+      bossbar:
+        start-at: 1h
+        interval: 1s
+        color: red
+        text: "{animation:new-year-bossbar}"
+```
 
 ---
 
@@ -289,7 +366,8 @@ Example:
       - "0"
 ```
 
-Title/subtitle/actionbar/message texts support `{i18n:key}` + placeholders + MiniMessage.
+Title/subtitle/actionbar/message texts support `{i18n:key}` + placeholders + MiniMessage.  
+Animations can also be used here via `{animation:<id>}`.
 
 ### 2) Transfer action
 
@@ -342,22 +420,22 @@ Configure:
 
 - Edit `config.yml` (language, timezone, global limitation)
 - Edit `timer.yml` (timers, showcases, actions)
+- (Optional) Edit `animations.yml` and use `{animation:<id>}` in texts
 
 Minimal example:
 
 ```yml
+# timer.yml
 timers:
   new-year:
     description: "New year timer."
     cron: "0 0 1 1 *"
     showcases:
-      actionbar:
+      bossbar:
         start-at: 1h
         interval: 1s
-        text: "<yellow>New Year in</yellow> <white>{remaining}</white>"
-        after:
-          text: "<gold>Happy New Year!</gold>"
-          duration: 10m
+        color: red
+        text: "{animation:new-year-bossbar}"
     actions:
       - type: text
         shift: 0s
@@ -371,6 +449,16 @@ timers:
             - "0"
 ```
 
+```yml
+# animations.yml
+animations:
+  new-year-bossbar:
+    interval: 0.5
+    text:
+      - "<gold>Happy New Year!</gold>"
+      - "<yellow>New Year in</yellow> <white>{remaining}</white>"
+```
+
 Reload:
 
 ```txt
@@ -382,7 +470,7 @@ Reload:
 ## Feedback
 
 Please use GitHub Issues for bug reports and feature requests.  
-When reporting a bug, include your Velocity version, the invertoTimer version, your `config.yml` and `timer.yml`, and
+When reporting a bug, include your Velocity version, the invertoTimer version, your configuration files, and
 the relevant console logs so the issue can be reproduced.
 
 ---
@@ -401,3 +489,14 @@ files when needed.
 
 This project is licensed under the MIT License. See
 the [LICENSE](https://github.com/Our-Island/invertoTimer/blob/master/LICENSE) file for details.
+
+This project uses the following third-party libraries. All dependencies are compatible with AGPL-3.0, and their licences
+are respected:
+
+- **Lombok**
+  - Repository: [Mojang/brigadier](https://github.com/projectlombok/lombok)
+  - License: [LICENSE](https://github.com/projectlombok/lombok/blob/master/LICENSE)
+
+- **SnakeYaml**
+  - Repository: [snakeyaml/snakeyaml](https://bitbucket.org/snakeyaml/snakeyaml/)
+  - License: [Apache-2.0](https://bitbucket.org/snakeyaml/snakeyaml/src/master/LICENSE.txt)

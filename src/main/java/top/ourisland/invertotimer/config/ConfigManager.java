@@ -2,6 +2,7 @@ package top.ourisland.invertotimer.config;
 
 import lombok.Getter;
 import org.slf4j.Logger;
+import top.ourisland.invertotimer.config.model.AnimationConfig;
 import top.ourisland.invertotimer.config.model.GlobalConfig;
 import top.ourisland.invertotimer.config.model.TimerConfig;
 import top.ourisland.invertotimer.util.YamlUtil;
@@ -21,6 +22,8 @@ public class ConfigManager {
     @Getter
     private GlobalConfig globalConfig = GlobalConfig.defaults();
     private Map<String, TimerConfig> timers = new LinkedHashMap<>();
+    @Getter
+    private Map<String, AnimationConfig> animations = new LinkedHashMap<>();
 
     public ConfigManager(final Logger logger, final Path dataDir) {
         this.logger = logger;
@@ -36,9 +39,11 @@ public class ConfigManager {
 
         copyDefaultIfAbsent("config.yml");
         copyDefaultIfAbsent("timer.yml");
+        copyDefaultIfAbsent("animations.yml");
 
         this.globalConfig = loadGlobal();
         this.timers = loadTimers();
+        this.animations = loadAnimations();
     }
 
     private void copyDefaultIfAbsent(final String filename) {
@@ -96,6 +101,38 @@ public class ConfigManager {
             return out;
         } catch (Exception e) {
             logger.error("Failed to load timer.yml", e);
+            return new LinkedHashMap<>();
+        }
+    }
+
+    private Map<String, AnimationConfig> loadAnimations() {
+        final Path p = dataDir.resolve("animations.yml");
+        if (!Files.exists(p)) {
+            return new LinkedHashMap<>();
+        }
+
+        try {
+            final Object root = YamlUtil.parse(Files.readString(p));
+            if (!(root instanceof Map<?, ?> m)) {
+                logger.warn("{} root is not a map.", p.getFileName());
+                return new LinkedHashMap<>();
+            }
+            Object animationsObj = m.get("animations");
+            if (!(animationsObj instanceof Map<?, ?> animationsMap)) {
+                logger.warn("{} missing 'animations:' root map.", p.getFileName());
+                return new LinkedHashMap<>();
+            }
+
+            final Map<String, AnimationConfig> out = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> e : animationsMap.entrySet()) {
+                final String id = String.valueOf(e.getKey());
+                if (e.getValue() instanceof Map<?, ?> am) {
+                    out.put(id, AnimationConfig.fromYaml(id, am));
+                }
+            }
+            return out;
+        } catch (Exception e) {
+            logger.error("Failed to load {}", p.getFileName(), e);
             return new LinkedHashMap<>();
         }
     }
