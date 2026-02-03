@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "top.ourisland"
-version = "0.2.0-SNAPSHOT"
+version = "0.2.0"
 
 repositories {
     mavenCentral()
