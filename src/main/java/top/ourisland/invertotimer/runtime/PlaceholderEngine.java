@@ -31,6 +31,29 @@ import java.util.regex.Pattern;
  * <p>
  * MiniPlaceholders are supported via MiniMessage tag resolvers (passed in from RuntimeContext),
  * not by reflection and not by scattering logic elsewhere.
+ *
+ * <h3>Remaining format</h3>
+ * {@code {remaining:...}} supports a tokenized format where ONLY parts wrapped by {@code %...%} are replaced.
+ * <p>
+ * Examples:
+ * <pre>
+ * {remaining:%hh%:%mm%:%ss%}
+ * {remaining:%d%Days %hh%:%mm%:%ss%}
+ * </pre>
+ * Tokens:
+ * <ul>
+ *   <li>{@code %d%} / {@code %dd%} ... : days</li>
+ *   <li>{@code %h%} / {@code %hh%} ... : hours (by default total hours if no days token is used)</li>
+ *   <li>{@code %m%} / {@code %mm%} ... : minutes</li>
+ *   <li>{@code %s%} / {@code %ss%} ... : seconds</li>
+ * </ul>
+ *
+ * <p>
+ * Optional suffix & hide-when-zero inside token:
+ * <pre>
+ * {remaining:%d:Days % %hh%:%mm%:%ss%}
+ * </pre>
+ * Token form {@code %d:Days %} will emit {@code "NDays "} when N&gt;0, otherwise emits empty string.
  */
 public final class PlaceholderEngine {
 
@@ -187,10 +210,10 @@ public final class PlaceholderEngine {
 
             case "total_seconds" -> String.valueOf(ctx.remainingSeconds());
 
-            case "days" -> formatUnit(ctx.days(), arg);
-            case "hours" -> formatUnit(ctx.hoursPart(), arg);
-            case "minutes" -> formatUnit(ctx.minutesPart(), arg);
-            case "seconds" -> formatUnit(ctx.secondsPart(), arg);
+            case "days" -> formatUnit(ctx.days(), arg, 'd');
+            case "hours" -> formatUnit(ctx.hoursPart(), arg, 'h');
+            case "minutes" -> formatUnit(ctx.minutesPart(), arg, 'm');
+            case "seconds" -> formatUnit(ctx.secondsPart(), arg, 's');
 
             case "remaining" -> formatRemaining(ctx, arg);
 
@@ -207,18 +230,28 @@ public final class PlaceholderEngine {
     }
 
     /**
-     * Format unit placeholders like {@code {days}} or {@code {days: 天}}.
-     * <p>
-     * If suffix is provided:
+     * Format unit placeholders like:
      * <ul>
-     *   <li>value == 0 -> hidden (empty string)</li>
-     *   <li>value  > 0 -> {@code value + suffix}</li>
+     *   <li>{@code {hours}} -> {@code 3}</li>
+     *   <li>{@code {hours:hh}} -> {@code 03}</li>
+     *   <li>{@code {hours:Hours}} -> {@code 3Hours} (hidden if 0)</li>
+     *   <li>{@code {hours:hh:Hours}} -> {@code 03Hours} (hidden if 0)</li>
+     * </ul>
+     *
+     * <p>Rules:
+     * <ul>
+     *   <li>If suffix is provided (non-empty), value==0 hides the whole placeholder.</li>
+     *   <li>Padding is applied when a width token like {@code hh} is provided.</li>
+     *   <li>Backward compatible with old {@code {days: 天}} form.</li>
      * </ul>
      */
-    private static String formatUnit(final long value, final String suffix) {
-        if (suffix == null) return String.valueOf(value);
-        if (value <= 0) return "";
-        return value + suffix;
+    private static String formatUnit(final long value, final String arg, final char unitLetter) {
+        UnitArg ua = UnitArg.parse(arg, unitLetter);
+
+        if (!ua.suffix.isEmpty() && value <= 0) return "";
+
+        String num = toPaddedNumber(value, ua.width);
+        return num + ua.suffix;
     }
 
     /**
@@ -226,18 +259,16 @@ public final class PlaceholderEngine {
      * <p>
      * No arg: {@link TimeUtil#formatHMS(long)}
      * <p>
-     * With arg: supports a lightweight formatter:
+     * With arg: ONLY parts wrapped by {@code %...%} are replaced. Everything else is literal.
+     * <p>
+     * Token examples:
      * <ul>
-     *   <li>Unit tokens: {@code d/dd...}, {@code h/hh...}, {@code m/mm...}, {@code s/ss...}</li>
-     *   <li>Literal characters preserved (e.g. {@code :} / spaces)</li>
-     *   <li>If a unit token has a suffix (e.g. {@code d天}), it will be hidden when the unit value is 0</li>
+     *   <li>{@code %d%}, {@code %dd%}</li>
+     *   <li>{@code %h%}, {@code %hh%}</li>
+     *   <li>{@code %m%}, {@code %mm%}</li>
+     *   <li>{@code %s%}, {@code %ss%}</li>
      * </ul>
-     * Examples:
-     * <pre>
-     * {remaining:hh:mm:ss}
-     * {remaining:d天 hh:mm:ss}   // hides "0天 " automatically
-     * {remaining:d天 h小时 m分}   // hides each unit when it's 0 (because suffix exists)
-     * </pre>
+     * Optional suffix+hide-when-zero inside token: {@code %d:Days %}.
      */
     private static String formatRemaining(final Context ctx, final String format) {
         long sec = ctx.remainingSeconds();
@@ -246,42 +277,24 @@ public final class PlaceholderEngine {
         RemainingFormat rf = RemainingFormat.parse(format);
 
         StringBuilder out = new StringBuilder();
-        for (int i = 0; i < rf.pieces.size(); i++) {
-            Piece p = rf.pieces.get(i);
+        for (Piece p : rf.pieces) {
             if (p.kind == Kind.LITERAL) {
-                if (shouldAppendLiteral(out, rf, i)) out.append(p.literal);
+                out.append(p.literal);
                 continue;
             }
-
-            String part = formatUnitPiece(ctx, rf, p);
-            if (!part.isEmpty()) out.append(part);
+            out.append(formatRemainingToken(ctx, rf, p));
         }
         return out.toString().trim();
     }
 
-    private static boolean shouldAppendLiteral(StringBuilder out, RemainingFormat rf, int idx) {
-        if (out.length() == 0) return false;
-
-        // avoid trailing delimiters when the rest emits nothing
-        for (int i = idx + 1; i < rf.pieces.size(); i++) {
-            Piece p = rf.pieces.get(i);
-            if (p.kind == Kind.UNIT && willEmitUnit(rf, p)) return true;
-            if (p.kind == Kind.LITERAL && p.literal.trim().isEmpty()) continue;
-        }
-        return false;
-    }
-
-    private static String formatUnitPiece(final Context ctx, final RemainingFormat rf, final Piece p) {
+    private static String formatRemainingToken(final Context ctx, final RemainingFormat rf, final Piece p) {
         if (p.kind != Kind.UNIT) return "";
 
         long v;
         switch (p.unit) {
             case 'd' -> v = ctx.days();
             case 'h' -> v = rf.usesDays ? ctx.hoursPart() : ctx.totalHours();
-            case 'm' -> {
-                if (rf.usesDays || rf.usesHours) v = ctx.minutesPart();
-                else v = ctx.totalMinutes();
-            }
+            case 'm' -> v = (rf.usesDays || rf.usesHours) ? ctx.minutesPart() : ctx.totalMinutes();
             case 's' ->
                     v = (rf.usesDays || rf.usesHours || rf.usesMinutes) ? ctx.secondsPart() : ctx.remainingSeconds();
             default -> {
@@ -293,12 +306,6 @@ public final class PlaceholderEngine {
 
         String num = toPaddedNumber(v, p.width);
         return num + p.suffix;
-    }
-
-    private static boolean willEmitUnit(RemainingFormat rf, Piece p) {
-        // This is a conservative check: unit may still emit (depending on actual values),
-        // but we only use it to decide delimiter emission.
-        return true;
     }
 
     private static String toPaddedNumber(long v, int width) {
@@ -363,6 +370,9 @@ public final class PlaceholderEngine {
         }
     }
 
+    /**
+     * Parsed remaining format where tokens are wrapped by %...%. Example: "%d%Days %hh%:%mm%:%ss%"
+     */
     private record RemainingFormat(List<Piece> pieces, boolean usesDays, boolean usesHours, boolean usesMinutes) {
 
         static RemainingFormat parse(final String fmt) {
@@ -371,51 +381,130 @@ public final class PlaceholderEngine {
 
             boolean usesD = false, usesH = false, usesM = false;
 
-            // keep ':' and whitespace as literals so users can format freely
-            Matcher m = Pattern.compile("(:|\\s+)").matcher(f);
-            int last = 0;
-            while (m.find()) {
-                String chunk = f.substring(last, m.start());
-                if (!chunk.isEmpty()) {
-                    Piece p = parseChunk(chunk);
-                    pieces.add(p);
-                    if (p.kind == Kind.UNIT) {
-                        if (p.unit == 'd') usesD = true;
-                        if (p.unit == 'h') usesH = true;
-                        if (p.unit == 'm') usesM = true;
-                    }
+            int i = 0;
+            int lastLiteralStart = 0;
+
+            while (i < f.length()) {
+                char c = f.charAt(i);
+                if (c != '%') {
+                    i++;
+                    continue;
                 }
-                pieces.add(Piece.literal(m.group(1)));
-                last = m.end();
-            }
-            String tail = f.substring(last);
-            if (!tail.isEmpty()) {
-                Piece p = parseChunk(tail);
+
+                if (i > lastLiteralStart) {
+                    pieces.add(Piece.literal(f.substring(lastLiteralStart, i)));
+                }
+
+                int end = f.indexOf('%', i + 1);
+                if (end < 0) {
+                    pieces.add(Piece.literal(f.substring(i)));
+                    return new RemainingFormat(pieces, usesD, usesH, usesM);
+                }
+
+                String token = f.substring(i + 1, end);
+                Piece p = parseToken(token);
                 pieces.add(p);
+
                 if (p.kind == Kind.UNIT) {
                     if (p.unit == 'd') usesD = true;
                     if (p.unit == 'h') usesH = true;
                     if (p.unit == 'm') usesM = true;
                 }
+
+                i = end + 1;
+                lastLiteralStart = i;
+            }
+
+            if (lastLiteralStart < f.length()) {
+                pieces.add(Piece.literal(f.substring(lastLiteralStart)));
             }
 
             return new RemainingFormat(pieces, usesD, usesH, usesM);
         }
 
-        private static Piece parseChunk(final String chunk) {
-            String c = chunk.trim();
-            if (c.isEmpty()) return Piece.literal(chunk);
+        /**
+         * Token forms:
+         * <ul>
+         *   <li>"hh" -> unit h width 2</li>
+         *   <li>"d"  -> unit d width 1</li>
+         *   <li>"d:Days " -> unit d width 1 suffix "Days " and hide when zero</li>
+         * </ul>
+         */
+        private static Piece parseToken(final String tokenRaw) {
+            String t = safe(tokenRaw);
+            if (t.isEmpty()) return Piece.literal("%%"); // defensive
 
-            char u = Character.toLowerCase(c.charAt(0));
-            if (u != 'd' && u != 'h' && u != 'm' && u != 's') return Piece.literal(chunk);
+            String left = t;
+            String suffix = "";
+            int colon = t.indexOf(':');
+            if (colon >= 0) {
+                left = t.substring(0, colon);
+                suffix = t.substring(colon + 1); // may contain spaces etc.
+            }
 
-            int width = 0;
-            while (width < c.length() && Character.toLowerCase(c.charAt(width)) == u) width++;
+            if (left.isEmpty()) return Piece.literal("%" + t + "%");
 
-            String suffix = c.substring(width); // may be empty
+            char u = Character.toLowerCase(left.charAt(0));
+            if (u != 'd' && u != 'h' && u != 'm' && u != 's') {
+                return Piece.literal("%" + t + "%");
+            }
+
+            for (int k = 0; k < left.length(); k++) {
+                if (Character.toLowerCase(left.charAt(k)) != u) {
+                    return Piece.literal("%" + t + "%");
+                }
+            }
+
+            int width = left.length();
             boolean hideWhenZero = !suffix.isEmpty();
-
             return Piece.unit(u, width, suffix, hideWhenZero);
+        }
+    }
+
+    /**
+     * Parsed arguments for unit placeholders like:
+     * <ul>
+     *   <li>{@code {hours}} -> arg = null</li>
+     *   <li>{@code {hours:hh}} -> width=2, suffix=""</li>
+     *   <li>{@code {hours:Hours}} -> width=0, suffix="Hours"</li>
+     *   <li>{@code {hours:hh:Hours}} -> width=2, suffix="Hours"</li>
+     * </ul>
+     */
+    private record UnitArg(int width, String suffix) {
+        static UnitArg parse(String a, char unitLetter) {
+            if (a == null) return new UnitArg(0, "");
+            if (a.isEmpty()) return new UnitArg(0, "");
+
+            int firstColon = a.indexOf(':');
+            if (firstColon >= 0) {
+                String left = a.substring(0, firstColon);
+                String suffix = a.substring(firstColon + 1);
+
+                int width = parseWidthToken(left, unitLetter);
+                if (width < 0) {
+                    return new UnitArg(0, a);
+                }
+                return new UnitArg(width, suffix);
+            }
+
+            // No ":" case:
+            // - if arg looks like "hh" / "mm" etc -> width token only
+            // - else treat as suffix only (legacy {days: 天})
+            int width = parseWidthToken(a, unitLetter);
+            if (width >= 0) return new UnitArg(width, "");
+            return new UnitArg(0, a);
+        }
+
+        private static int parseWidthToken(String s, char unitLetter) {
+            if (s == null) return -1;
+            if (s.isEmpty()) return 0;
+            char u = Character.toLowerCase(unitLetter);
+
+            // Accept "h", "hh", "hhh"... for hours (etc.)
+            for (int i = 0; i < s.length(); i++) {
+                if (Character.toLowerCase(s.charAt(i)) != u) return -1;
+            }
+            return s.length();
         }
     }
 }
