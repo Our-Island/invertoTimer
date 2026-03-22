@@ -61,7 +61,7 @@ This project uses the following third-party libraries. All dependencies are comp
 are respected:
 
 - **Lombok**
-  - Repository: [Mojang/brigadier](https://github.com/projectlombok/lombok)
+  - Repository: [projectlombok/lombok](https://github.com/projectlombok/lombok)
   - License: [LICENSE](https://github.com/projectlombok/lombok/blob/master/LICENSE)
 
 - **SnakeYaml**
