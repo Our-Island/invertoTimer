@@ -1,5 +1,7 @@
 <div align="center">
 
+<img height="256" alt="invertotimer-icon" src="https://github.com/user-attachments/assets/5e5c843c-5420-44ba-ba84-7e5c017cc872" />
+
 # invertoTimer
 
 [![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FOur-Island%2FinvertoTimer&labelColor=%23444444&countColor=%23f24822&style=flat-square&labelStyle=none)](https://visitorbadge.io/status?path=https://github.com/Our-Island/invertoTimer/)
