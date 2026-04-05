@@ -57,7 +57,7 @@ files when needed.
 This project is licensed under the MIT License. See
 the [LICENSE](https://github.com/Our-Island/invertoTimer/blob/master/LICENSE) file for details.
 
-This project uses the following third-party libraries. All dependencies are compatible with AGPL-3.0, and their licences
+This project uses the following third-party libraries. All dependencies are compatible with MIT, and their licences
 are respected:
 
 - **Lombok**
